@@ -11,17 +11,17 @@ var messages = [];
 
 letters = "abcdefghijklmnopqrstuvwxyz";
 
-fs.appendFile('waiting.txt', '');
-fs.appendFile('users.txt', '');
+fs.appendFile('waiting.txt', '', function(err) { });
+fs.appendFile('users.txt', '', function(err) { });
 
 fs.readFile('waiting.txt', function(err, data) {
-    if (data.trim() != "")
-        peopleWaiting = JSON.parse(data.trim());
+    if (data != "")
+        peopleWaiting = JSON.parse(data);
 });
 
 fs.readFile('users.txt', function(err, data) {
-    if (data.trim() != "")
-        users = JSON.parse(data.trim());
+    if (data != "")
+        users = JSON.parse(data);
 });
 
 function getRandom(max) {
