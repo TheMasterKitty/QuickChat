@@ -37,6 +37,7 @@
                 document.getElementById("main").style.display = "block";
                 if (document.getElementById("username").value === "dylanz") {
                     document.getElementById("loginReqs").style.display = "block";
+                    document.getElementById("removePeople").style.display = "block";
                 }
                 token = reply;
                 setCookie("token", token, 7200000);
@@ -79,7 +80,6 @@
                 }, 2000);
             }
         }
-
         async function getLoginReqs() {
             var dataReply = await sendPostRequest("/api/getwaiting", {
                 token: token,
@@ -105,54 +105,81 @@
                 }
             }
         }
-        onload += function() {
-            setTimeout(() => {
+        async function getPeople() {
+            var dataReply = await sendPostRequest("/api/people", {
+                token: token,
+            });
+            alert(dataReply);
+            var remove = prompt("Who Should Be Removed (seperate by ;):");
+            for (const i of remove.split(";")) {
+                sendPostRequest("/api/removepeople", {
+                    token: token,
+                    name: i
+                });
+            }
+        }
+        onload = function () {
+            setTimeout(async () => {
                 let tokenCookie = getCookie("token");
                 if (tokenCookie != "") {
                     token = tokenCookie;
-                    setTimeout(() => {
-                        setInterval(async () => {
-                            var dataReply = await sendPostRequest("/api/getmessages", {
-                                token: token,
-                            });
-                            if (
-                                document
-                                .getElementById("messages")
-                                .srcdoc.split("<h1>")[1]
-                                .split("</h1>")[0] != dataReply
-                            ) {
-                                document.getElementById("messages").srcdoc =
-                                    "<style>* { color: white; }</style><h1>" +
-                                    dataReply +
+                    var reply = await sendPostRequest("/api/validatetoken", {
+                        token: token,
+                    });
+                    if (reply == "valid") {
+                        document.getElementById("login").style.display = "none";
+                        document.getElementById("main").style.display = "block";
+                        var nameReply = await sendPostRequest("/api/getname", {
+                            token: token,
+                        });
+                        if (nameReply === "dylanz") {
+                            document.getElementById("loginReqs").style.display = "block";
+                            document.getElementById("removePeople").style.display = "block";
+                        }
+                        setTimeout(() => {
+                            setInterval(async () => {
+                                var dataReply = await sendPostRequest("/api/getmessages", {
+                                    token: token,
+                                });
+                                if (
+                                    document
+                                    .getElementById("messages")
+                                    .srcdoc.split("<h1>")[1]
+                                    .split("</h1>")[0] != dataReply
+                                ) {
+                                    document.getElementById("messages").srcdoc =
+                                        "<style>* { color: white; }</style><h1>" +
+                                        dataReply +
+                                        "</h1>";
+                                }
+                            }, 250);
+                            setInterval(async () => {
+                                var dataReply = await sendPostRequest("/api/validatetoken", {
+                                    token: token,
+                                });
+                                var dataReply2 = await sendPostRequest("/api/getstatuses", {
+                                    token: token,
+                                });
+                                if (dataReply != "valid") window.location.reload();
+                                if (
+                                    document
+                                    .getElementById("statuses")
+                                    .srcdoc.split("<h1>")[2]
+                                    .split("</h1>")[0] != dataReply2
+                                )
+                                    document.getElementById("statuses").srcdoc =
+                                    "<style>* { color: white; }</style><h1>Online:</h1><h1>" +
+                                    dataReply2 +
                                     "</h1>";
-                            }
-                        }, 250);
-                        setInterval(async () => {
-                            var dataReply = await sendPostRequest("/api/validatetoken", {
-                                token: token,
-                            });
-                            var dataReply2 = await sendPostRequest("/api/getstatuses", {
-                                token: token,
-                            });
-                            if (dataReply != "valid") window.location.reload();
-                            if (
-                                document
-                                .getElementById("statuses")
-                                .srcdoc.split("<h1>")[2]
-                                .split("</h1>")[0] != dataReply2
-                            )
-                                document.getElementById("statuses").srcdoc =
-                                "<style>* { color: white; }</style><h1>Online:</h1><h1>" +
-                                dataReply2 +
-                                "</h1>";
-                        }, 500);
-                    }, 2000);
+                            }, 500);
+                        }, 2000);
+                    }
                 }
             }, 750);
         };
 
         function sendMessage() {
-            if (Date.now() >= lastmessagetime + 1250) {
+            if (Date.now() <= lastmessagetime + 1250) {
                 document.getElementById("message").style.color = "darkred";
                 setTimeout(() => {
                     document.getElementById("message").style.color = "black";
@@ -272,6 +299,9 @@
         <button onclick="sendMessage();" style="top:90%; left: 61%">SEND</button>
         <button id="loginReqs" onclick="getLoginReqs();" style="top:1%; width:10%; left: 1%; display:none;">
             REQUESTS
+        </button>
+        <button id="removePeople" onclick="getPeople();" style="top:8%; width:10%; left: 1%; display:none;">
+            ACCOUNTS
         </button>
     </div>
 </body>

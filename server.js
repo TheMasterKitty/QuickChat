@@ -81,6 +81,26 @@ app.post("/api/waitstatus", function(req, res) {
         }
 });
 
+app.post("/api/people", function(req, res) {
+    if (typeof req.body != "undefined" && typeof req.body.token != "undefined")
+        if (
+            typeof activeTokens[req.body.token] != "undefined" &&
+            activeTokens[req.body.token] === "dylanz"
+        )
+            res.send(Object.keys(users).join(";"));
+});
+
+
+app.post("/api/removepeople", function(req, res) {
+    if (typeof req.body != "undefined" && typeof req.body.token != "undefined" && typeof req.body.name != "undefined")
+        if (
+            typeof activeTokens[req.body.token] != "undefined" &&
+            activeTokens[req.body.token] === "dylanz" &&
+            req.body.name != "dylanz"
+        )
+            delete users[req.body.name];
+});
+
 app.post("/api/signup", function(req, res) {
     if (
         typeof req.body != "undefined" &&
@@ -105,7 +125,7 @@ app.post("/api/login", function(req, res) {
     ) {
         if (
             Object.keys(users).includes(req.body.username) &&
-            Object.values(users)[Object.keys(users).indexOf(req.body.username)] ===
+            users[req.body.username] ===
             req.body.password
         ) {
             var token = "";
@@ -151,7 +171,8 @@ app.post("/api/message", function(req, res) {
         if (
             typeof activeTokens[req.body.token] != "undefined" &&
             !req.body.message.includes("<br>") &&
-            req.body.message != ""
+            req.body.message != "" &&
+            Date.now() >= lastMessageTimes[activeTokens[req.body.token]] + 1250
         ) {
             lastMessageTimes[activeTokens[req.body.token]] = Date.now();
             messages.push(activeTokens[req.body.token] + ": " + req.body.message);
@@ -175,11 +196,19 @@ app.post("/api/getstatuses", function(req, res) {
     }
 });
 
+app.post("/api/getname", function(req, res) {
+    if (typeof req.body != "undefined" && typeof req.body.token != "undefined") {
+        if (typeof activeTokens[req.body.token] != "undefined") {
+            res.send(activeTokens[req.body.token]);
+        }
+    }
+});
+
 app.post("/api/validatetoken", function(req, res) {
     if (typeof req.body != "undefined" && typeof req.body.token != "undefined") {
-        if (typeof activeTokens[req.body.token] != "undefined" && Date.now() >= lastMessageTimes[activeTokens[req.body.token]] + 1250) {
-            lastMessageTimes[activeTokens[req.body.token]] = Date.now();
+        if (typeof activeTokens[req.body.token] != "undefined") {
             res.send("valid");
+            onlineUsers[activeTokens[req.body.token]] = Date.now();
         } else res.send("invalid");
     }
 });
