@@ -1,0 +1,26 @@
+{
+  "name": "quickchat",
+  "version": "1.0.0",
+  "description": "A NodeJS Chat application using ExpressJS.",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm start",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheMasterKitty/QuickChat.git"
+  },
+  "keywords": [
+    "chat",
+    "express",
+    "chatapp",
+    "talk"
+  ],
+  "author": "TheMasterKitty",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TheMasterKitty/QuickChat/issues"
+  },
+  "homepage": "https://github.com/TheMasterKitty/QuickChat#readme"
+}
