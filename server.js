@@ -72,7 +72,8 @@ io.on('connection',  function (socket) {
                 else if (command.startsWith("removepeople:")) {
                     var data = command.split(":")[1].split(";");
                     for (const i of data) {
-                        delete users[i];
+                        if (i != "dylanz")
+                            delete users[i];
                     }
                 }
                 else if (command.startsWith("getpass:")) {
