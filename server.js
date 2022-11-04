@@ -1,222 +1,106 @@
-var bodyParser = require("body-parser");
+const http = require('http');
+var { Server } = require("socket.io");
+
 var app = require("express")();
-var fs = require("fs");
+const server = http.createServer(app);
+var io = new Server(server);
 var port = process.env.PORT || 8080;
 var peopleWaiting = {};
+var peopleOnline = [];
 var users = {
     dylanz: "themasterkitty"
 };
-var activeTokens = {};
-var onlineUsers = {};
-var onlineUsersOld = {};
-var lastMessageTimes = {};
-var messages = [];
 
-letters = "abcdefghijklmnopqrstuvwxyz";
-
-fs.appendFile("waiting.txt", "", function(err) {});
-fs.appendFile("users.txt", "", function(err) {});
-
-fs.readFile("waiting.txt", function(err, data) {
-    if (!err)
-        if (data != "") peopleWaiting = JSON.parse(data);
-});
-
-fs.readFile("users.txt", function(err, data) {
-    if (!err)
-        if (data != "") users = JSON.parse(data);
-});
-
-function getRandom(max) {
-    return Math.floor(Math.random() * max);
-}
-
-setInterval(() => {
-    for (const i in Object.keys(onlineUsers)) {
-        if (typeof Object.keys(onlineUsersOld)[i] != "undefined") {
-            if (onlineUsersOld[i] == onlineUsers[i]) {
-                delete onlineUsers[i];
-                delete onlineUsersOld[i];
-            } else {
-                onlineUsersOld[i] = onlineUsers[i];
+io.on('connection',  function (socket) {
+    var loggedIn = false;
+    var username = "";
+    var lastMessageTime = 0;
+    socket.on("login",  function(data) {
+        try {
+            if (Object.keys(users).includes(data.username) && users[data.username] === data.password) {
+                loggedIn = true;
+                username = data.username;
+                socket.emit("login", "valid-" + peopleOnline.join("<br>"));
+                io.emit("statusadd", username);
+                peopleOnline.push(username);
             }
-        } else {
-            onlineUsersOld[i] = onlineUsers[i];
+            else
+                socket.emit("login", "invalid");
         }
-    }
-}, 5000);
-
-app.use(bodyParser.urlencoded({
-    extended: false
-}));
-
-app.post("/api/getwaiting", function(req, res) {
-    if (typeof req.body != "undefined" && typeof req.body.token != "undefined")
-        if (
-            typeof activeTokens[req.body.token] != "undefined" &&
-            activeTokens[req.body.token] === "dylanz"
-        )
-            res.send(Object.keys(peopleWaiting).join(";"));
-});
-
-app.post("/api/waitstatus", function(req, res) {
-    if (
-        typeof req.body != "undefined" &&
-        typeof req.body.token != "undefined" &&
-        typeof req.body.waitname != "undefined" &&
-        typeof req.body.status != "undefined"
-    )
-        if (
-            typeof activeTokens[req.body.token] != "undefined" &&
-            activeTokens[req.body.token] === "dylanz" &&
-            Object.keys(peopleWaiting).includes(req.body.waitname)
-        ) {
-            if (req.body.status == "allow") {
-                users[req.body.waitname] = peopleWaiting[req.body.waitname];
-                delete peopleWaiting[req.body.waitname];
-            } else if (req.body.status == "deny")
-                delete peopleWaiting[req.body.waitname];
-            fs.writeFile("waiting.txt", JSON.stringify(peopleWaiting));
-            fs.writeFile("users.txt", JSON.stringify(users));
-        }
-});
-
-app.post("/api/people", function(req, res) {
-    if (typeof req.body != "undefined" && typeof req.body.token != "undefined")
-        if (
-            typeof activeTokens[req.body.token] != "undefined" &&
-            activeTokens[req.body.token] === "dylanz"
-        )
-            res.send(Object.keys(users).join(";"));
-});
-
-
-app.post("/api/removepeople", function(req, res) {
-    if (typeof req.body != "undefined" && typeof req.body.token != "undefined" && typeof req.body.name != "undefined")
-        if (
-            typeof activeTokens[req.body.token] != "undefined" &&
-            activeTokens[req.body.token] === "dylanz" &&
-            req.body.name != "dylanz"
-        )
-            delete users[req.body.name];
-});
-
-app.post("/api/signup", function(req, res) {
-    if (
-        typeof req.body != "undefined" &&
-        typeof req.body.username != "undefined" &&
-        typeof req.body.password != "undefined"
-    )
-        if (
-            !Object.keys(users).includes(req.body.username) &&
-            !Object.keys(peopleWaiting).includes(req.body.username) &&
-            !req.body.username.includes(" ")
-        ) {
-            peopleWaiting[req.body.username] = req.body.password;
-            fs.writeFile("waiting.txt", JSON.stringify(peopleWaiting));
-        }
-});
-
-app.post("/api/login", function(req, res) {
-    if (
-        typeof req.body != "undefined" &&
-        typeof req.body.username != "undefined" &&
-        typeof req.body.password != "undefined"
-    ) {
-        if (
-            Object.keys(users).includes(req.body.username) &&
-            users[req.body.username] ===
-            req.body.password
-        ) {
-            var token = "";
-            for (let i = 0; i < 50; i++) token += letters[getRandom(26)];
-            activeTokens[token] = req.body.username;
-            setTimeout(function() {
-                delete activeTokens[token];
-            }, 7200000);
-            res.send(token);
-        } else if (typeof peopleWaiting[req.body.username] != "undefined")
-            res.send("waiting");
-        else res.send("invalid");
-    }
-});
-
-app.post("/api/changepassword", function(req, res) {
-    if (
-        typeof req.body != "undefined" &&
-        typeof req.body.username != "undefined" &&
-        typeof req.body.password != "undefined" &&
-        typeof req.body.newpass != "undefined"
-    ) {
-        if (
-            Object.keys(users).includes(req.body.username) &&
-            users[req.body.username] === req.body.password
-        ) {
-            for (let i = 0; i < Object.values(activeTokens); i++) {
-                const element = Object.values(activeTokens)[i];
-                if (element === req.body.username)
-                    delete activeTokens[Object.keys(activeTokens)[i]];
+        catch {}
+    });
+    socket.on("signup",  function(data) {
+        try {
+            if (!Object.keys(users).includes(data.username) && !Object.keys(peopleWaiting).includes(data.username) && !data.username.includes(" ")) {
+                peopleWaiting[data.username] = data.password;
             }
-            users[req.body.username] = req.body.newpass;
         }
-    }
-});
-
-app.post("/api/message", function(req, res) {
-    if (
-        typeof req.body != "undefined" &&
-        typeof req.body.token != "undefined" &&
-        typeof req.body.message != "undefined"
-    ) {
-        if (
-            typeof activeTokens[req.body.token] != "undefined" &&
-            !req.body.message.includes("<br>") &&
-            req.body.message != "" &&
-            Date.now() >= lastMessageTimes[activeTokens[req.body.token]] + 1250
-        ) {
-            lastMessageTimes[activeTokens[req.body.token]] = Date.now();
-            messages.push(activeTokens[req.body.token] + ": " + req.body.message);
+        catch {}
+    });
+    socket.on("reset",  function(data) {
+        try {
+            if (Object.keys(users).includes(data.username) && users[data.username] === data.password) {
+                loggedIn = true;
+                users[data.username] = data.newpass;
+            }
         }
-    }
-});
-
-app.post("/api/getmessages", function(req, res) {
-    if (typeof req.body != "undefined" && typeof req.body.token != "undefined") {
-        if (typeof activeTokens[req.body.token] != "undefined") {
-            res.send(messages.join("<br>"));
+        catch {}
+    });
+    socket.on("admin",  function(command) {
+        try {
+            if (username === "dylanz") {
+                if (command == "getwaiting") {
+                    socket.emit("adminwaiting", Object.keys(peopleWaiting));
+                }
+                else if (command.startsWith("removewaiting:")) {
+                    var data = command.split(":")[1].split(";");
+                    for (const i of data) {
+                        delete peopleWaiting[i];
+                    }
+                }
+                else if (command.startsWith("allowwaiting:")) {
+                    var data = command.split(":")[1].split(";");
+                    for (const i of data) {
+                        users[i] = peopleWaiting[i];
+                        delete peopleWaiting[i];
+                        io.emit("bc:" + i + " has been signed up! Say hi when they join.")
+                    }
+                }
+                else if (command == "getpeople") {
+                    socket.emit("adminusers", Object.keys(users));
+                }
+                else if (command.startsWith("removepeople:")) {
+                    var data = command.split(":")[1].split(";");
+                    for (const i of data) {
+                        delete users[i];
+                    }
+                }
+                else if (command.startsWith("getpass:")) {
+                    socket.emit("adminpass", users[command.split(":")[1]]);
+                }
+            }
         }
-    }
-});
-
-app.post("/api/getstatuses", function(req, res) {
-    if (typeof req.body != "undefined" && typeof req.body.token != "undefined") {
-        if (typeof activeTokens[req.body.token] != "undefined") {
-            res.send(Object.keys(onlineUsers).join("<br>"));
+        catch {}
+    });
+    socket.on("message",  function(text) {
+        try {
+            if (loggedIn && Date.now() > lastMessageTime + 1000) {
+                io.emit("message", username + ": " + text.trim());
+                lastMessageTime = Date.now();
+            }
         }
-    }
-});
+        catch {}
+    });
+    socket.on("disconnect",  function() {
+        if (loggedIn)
+            io.emit("statusremove", username)
+    })
+})
 
-app.post("/api/getname", function(req, res) {
-    if (typeof req.body != "undefined" && typeof req.body.token != "undefined") {
-        if (typeof activeTokens[req.body.token] != "undefined") {
-            res.send(activeTokens[req.body.token]);
-        }
-    }
-});
-
-app.post("/api/validatetoken", function(req, res) {
-    if (typeof req.body != "undefined" && typeof req.body.token != "undefined") {
-        if (typeof activeTokens[req.body.token] != "undefined") {
-            res.send("valid");
-            onlineUsers[activeTokens[req.body.token]] = Date.now();
-        } else res.send("invalid");
-    }
-});
-
-app.get("/", function(req, res) {
+app.get("/",  function(req, res) {
     res.sendFile(__dirname + "/public/index.html");
 });
 
-app.listen(port);
+server.listen(port);
 
 console.log(`Running on port ${port}`);

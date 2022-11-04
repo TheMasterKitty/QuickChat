@@ -1,7 +1,7 @@
 {
   "name": "quickchat",
-  "version": "1.0.0",
-  "description": "A NodeJS Chat application using ExpressJS.",
+  "version": "2.0.0",
+  "description": "A NodeJS Chat application using SocketIO.",
   "main": "server.js",
   "scripts": {
     "test": "npm start",
@@ -22,5 +22,9 @@
   "bugs": {
     "url": "https://github.com/TheMasterKitty/QuickChat/issues"
   },
-  "homepage": "https://github.com/TheMasterKitty/QuickChat#readme"
+  "homepage": "https://github.com/TheMasterKitty/QuickChat#readme",
+  "dependencies": {
+    "socket.io": "^4.5.3"
+  },
+  "devDependencies": {}
 }
