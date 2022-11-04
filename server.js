@@ -92,8 +92,10 @@ io.on('connection',  function (socket) {
         catch {}
     });
     socket.on("disconnect",  function() {
-        if (loggedIn)
+        if (loggedIn) {
             io.emit("statusremove", username)
+            peopleOnline.splice(peopleOnline.indexOf(username), 1);
+        }
     })
 })
 
