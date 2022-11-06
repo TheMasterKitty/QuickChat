@@ -58,16 +58,22 @@
         });
 
         socket.on("statusadd", function(data) {
-            document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split("</h1>")[0] + data + "<br></h1>";
+            if (document.getElementById("login").style.display == "none") {
+                document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split("</h1>")[0] + data + "<br></h1>";
+            }
         });
 
         socket.on("statusremove", function(data) {
-            document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split(data)[0] + document.getElementById("statuses").srcdoc.split(data + "<br>")[1];
+            if (document.getElementById("login").style.display == "none") {
+                document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split(data)[0] + document.getElementById("statuses").srcdoc.split(data + "<br>")[1];
+            }
         });
 
         socket.on("message", function(data) {
-            document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + data + "<br></h1>";
-            document.getElementById('messages').contentWindow.scrollTo(0, document.getElementById('messages').scrollHeight);
+            if (document.getElementById("login").style.display == "none") {
+                document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + data + "<br></h1>";
+                document.getElementById('messages').contentWindow.scrollTo(0, document.getElementById('messages').scrollHeight);
+            }
         })
 
         function sendMessage() {
