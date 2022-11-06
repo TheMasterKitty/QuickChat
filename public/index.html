@@ -58,7 +58,7 @@
         });
 
         socket.on("statusremove", function(data) {
-            document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split(data)[0] + document.getElementById("statuses").srcdoc.split(data)[1];
+            document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split(data)[0] + document.getElementById("statuses").srcdoc.split(data + "<br>")[1];
         });
 
         socket.on("message", function(data) {
