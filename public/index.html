@@ -27,8 +27,10 @@
             }
         });
         socket.on("remove", function(data) {
-            alert("Your account got removed!");
-            window.location.reload();
+            if (data == document.getElementById("username").value) {
+                alert("Your account got removed!");
+                window.location.reload();
+            }
         })
         socket.on("adminwaiting",  function(data) {
             alert("People Waiting: [" + data.join(", ") + "]");
