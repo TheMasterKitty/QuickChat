@@ -67,6 +67,7 @@
 
         socket.on("message", function(data) {
             document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + data + "<br></h1>";
+            document.getElementById('messages').contentWindow.scrollTo(0, document.getElementById('messages').scrollHeight);
         })
 
         function sendMessage() {

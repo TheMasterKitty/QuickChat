@@ -64,9 +64,9 @@ io.on('connection',  function (socket) {
                 else if (command.startsWith("allowwaiting:")) {
                     var data = command.split(":")[1].split(";");
                     for (const i of data) {
+                        io.emit("message", i + " has been signed up! Say hi when they join.")
                         users[i] = peopleWaiting[i];
                         delete peopleWaiting[i];
-                        io.emit("bc:" + i + " has been signed up! Say hi when they join.")
                     }
                 }
                 else if (command == "getpeople") {
@@ -98,8 +98,10 @@ io.on('connection',  function (socket) {
         catch {}
     });
     socket.on("disconnect",  function() {
-        if (loggedIn)
+        if (loggedIn) {
+            peopleOnline.splice(peopleOnline.indexOf(username), 1)
             io.emit("statusremove", username);
+        }
     })
 })
 
