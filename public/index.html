@@ -20,6 +20,8 @@
                     document.getElementById("getPass").style.display = "block";
                 }
             }
+            else if (data == "taken")
+                alert("There is already a user on this account, and the password could be wrong. To kick them, reset the password.");
             else {
                 alert("Invalid Username / Password!");
             }

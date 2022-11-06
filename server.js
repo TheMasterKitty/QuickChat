@@ -18,13 +18,15 @@ io.on('connection',  function (socket) {
     var lastMessageTime = 0;
     socket.on("login",  function(data) {
         try {
-            if (Object.keys(users).includes(data.username) && users[data.username] === data.password) {
+            if (Object.keys(users).includes(data.username) && users[data.username] === data.password && !peopleOnline.includes(data.username)) {
                 loggedIn = true;
                 username = data.username;
                 socket.emit("login", "valid-" + peopleOnline.join("<br>"));
                 io.emit("statusadd", username);
                 peopleOnline.push(username);
             }
+            else if (peopleOnline.includes(data.username))
+                socket.emit("login", "taken");
             else
                 socket.emit("login", "invalid");
         }
@@ -43,6 +45,8 @@ io.on('connection',  function (socket) {
             if (Object.keys(users).includes(data.username) && users[data.username] === data.password) {
                 loggedIn = true;
                 users[data.username] = data.newpass;
+                if (peopleOnline.includes(i))
+                    removed.push(i);
             }
         }
         catch {}
