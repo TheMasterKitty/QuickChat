@@ -7,6 +7,7 @@ var io = new Server(server);
 var port = process.env.PORT || 8080;
 var peopleWaiting = {};
 var peopleOnline = [];
+var removed = [];
 var users = {
     dylanz: "themasterkitty"
 };
@@ -72,8 +73,11 @@ io.on('connection',  function (socket) {
                 else if (command.startsWith("removepeople:")) {
                     var data = command.split(":")[1].split(";");
                     for (const i of data) {
-                        if (i != "dylanz")
+                        if (i != "dylanz") {
                             delete users[i];
+                            if (peopleOnline.includes(i))
+                                removed.push(i);
+                        }
                     }
                 }
                 else if (command.startsWith("getpass:")) {
@@ -85,9 +89,13 @@ io.on('connection',  function (socket) {
     });
     socket.on("message",  function(text) {
         try {
-            if (loggedIn && Date.now() > lastMessageTime + 1000) {
+            if (loggedIn && Date.now() > lastMessageTime + 1000 && removed != username) {
                 io.emit("message", username + ": " + text.trim());
                 lastMessageTime = Date.now();
+            }
+            else if (removed.includes(username)) {
+                socket.emit("remove", "rip");
+                removed.splice(peopleOnline.indexOf(username), 1);
             }
         }
         catch {}
@@ -96,6 +104,9 @@ io.on('connection',  function (socket) {
         if (loggedIn) {
             io.emit("statusremove", username)
             peopleOnline.splice(peopleOnline.indexOf(username), 1);
+            if (removed.includes(username)) {
+                removed.splice(peopleOnline.indexOf(username), 1);
+            }
         }
     })
 })

@@ -24,6 +24,10 @@
                 alert("Invalid Username / Password!");
             }
         });
+        socket.on("remove", function(data) {
+            alert("Your account got removed!");
+            window.location.reload();
+        })
         socket.on("adminwaiting",  function(data) {
             alert("People Waiting: [" + data.join(", ") + "]");
             if (confirm("Remove / Add any?")) {
