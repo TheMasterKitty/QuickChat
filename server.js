@@ -137,8 +137,8 @@ app.get("/parrot.png", function(req, res) {
     res.sendFile(__dirname + "/public/parrot.png");
 });
 
-app.get("/tiger.png", function(req, res) {
-    res.sendFile(__dirname + "/public/tiger.png");
+app.get("/goat.png", function(req, res) {
+    res.sendFile(__dirname + "/public/goat.png");
 });
 
 server.listen(port);
