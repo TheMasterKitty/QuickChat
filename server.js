@@ -8,7 +8,10 @@ var port = process.env.PORT || 8080;
 var peopleWaiting = {};
 var peopleOnline = [];
 var users = {
-    dylanz: "themasterkitty"
+    "dylanz": "themasterkitty"
+};
+var pfps = {
+    "dylanz": "cat.png"
 };
 
 io.on('connection',  function (socket) {
@@ -33,8 +36,8 @@ io.on('connection',  function (socket) {
     });
     socket.on("signup",  function(data) {
         try {
-            if (!Object.keys(users).includes(data.username) && !Object.keys(peopleWaiting).includes(data.username) && !data.username.includes(" ")) {
-                peopleWaiting[data.username] = data.password;
+            if (!Object.keys(users).includes(data.username) && !Object.keys(peopleWaiting).includes(data.username) && !data.username.includes(" ") && !data.password.includes(" ") && data.username != "" && data.password != "") {
+                peopleWaiting[data.username] = {"pass": data.password, "pfp": data.pfp};
             }
         }
         catch {}
@@ -65,7 +68,8 @@ io.on('connection',  function (socket) {
                     var data = command.split(":")[1].split(";");
                     for (const i of data) {
                         io.emit("message", i + " has been signed up! Say hi when they join.")
-                        users[i] = peopleWaiting[i];
+                        users[i] = peopleWaiting[i]["pass"];
+                        pfps[i] = peopleWaiting[i]["pfp"];
                         delete peopleWaiting[i];
                     }
                 }
@@ -77,6 +81,7 @@ io.on('connection',  function (socket) {
                     for (const i of data) {
                         if (i != "dylanz") {
                             delete users[i];
+                            delete pfps[i];
                             io.emit("remove", i);
                         }
                     }
@@ -91,7 +96,7 @@ io.on('connection',  function (socket) {
     socket.on("message",  function(text) {
         try {
             if (loggedIn && Date.now() > lastMessageTime + 1000) {
-                io.emit("message", username + ": " + text.trim());
+                io.emit("message", [pfps[username], username, text.trim()]);
                 lastMessageTime = Date.now();
             }
         }
@@ -103,10 +108,34 @@ io.on('connection',  function (socket) {
             io.emit("statusremove", username);
         }
     })
-})
+});
 
 app.get("/",  function(req, res) {
     res.sendFile(__dirname + "/public/index.html");
+});
+
+app.get("/icon.png", function(req, res) {
+    res.sendFile(__dirname + "/public/icon.png");
+});
+
+app.get("/cat.png", function(req, res) {
+    res.sendFile(__dirname + "/public/cat.png");
+});
+
+app.get("/horse.png", function(req, res) {
+    res.sendFile(__dirname + "/public/horse.png");
+});
+
+app.get("/fox.png", function(req, res) {
+    res.sendFile(__dirname + "/public/fox.png");
+});
+
+app.get("/parrot.png", function(req, res) {
+    res.sendFile(__dirname + "/public/parrot.png");
+});
+
+app.get("/tiger.png", function(req, res) {
+    res.sendFile(__dirname + "/public/tiger.png");
 });
 
 server.listen(port);
