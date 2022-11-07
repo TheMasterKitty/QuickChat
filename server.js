@@ -39,6 +39,9 @@ io.on('connection',  function (socket) {
             if (!Object.keys(users).includes(data.username) && !Object.keys(peopleWaiting).includes(data.username) && !data.username.includes(" ") && !data.password.includes(" ") && data.username != "" && data.password != "") {
                 peopleWaiting[data.username] = {"pass": data.password, "pfp": data.pfp};
             }
+            else if (Object.keys(users).includes(data.username) && users[data.username] === data.password) {
+                pfps[data.username] = data.pfp;
+            }
         }
         catch {}
     });
@@ -67,9 +70,9 @@ io.on('connection',  function (socket) {
                 else if (command.startsWith("allowwaiting:")) {
                     var data = command.split(":")[1].split(";");
                     for (const i of data) {
-                        io.emit("message", i + " has been signed up! Say hi when they join.")
                         users[i] = peopleWaiting[i]["pass"];
                         pfps[i] = peopleWaiting[i]["pfp"];
+                        io.emit("message", [pfps[i], "BROADCAST", i + " has been signed up! Say hi when they join."]);
                         delete peopleWaiting[i];
                     }
                 }
