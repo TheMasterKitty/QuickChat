@@ -8,6 +8,11 @@
     <script>
         var socket = io();
         var lastmessagetime = 0;
+        var unfocusedMsgs = 0;
+        document.onfocus = function() {
+            document.title = "QuickChat";
+            unfocusedMsgs = 0;
+        }
         socket.on("login",  function(data) {
             if (data.startsWith("valid-")) {
                 if (data.split("-")[1].length != 0)
@@ -73,6 +78,10 @@
             if (document.getElementById("login").style.display == "none") {
                 document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + data[1] + ": " + data[2] + "<br></h1>";
                 document.getElementById('messages').contentWindow.scrollTo(0, 2147483647);
+                if (!document.hasFocus()) {
+                    unfocusedMsgs++;
+                    document.title = "QuickChat - " + unfocusedMsgs;
+                }
             }
         })
 
