@@ -8,10 +8,10 @@ var port = process.env.PORT || 8080;
 var peopleWaiting = {};
 var peopleOnline = [];
 var users = {
-    "dylanz": "themasterkitty"
+    "kitcat": "themasterkitty"
 };
 var pfps = {
-    "dylanz": "cat.png"
+    "kitcat": "cat.png"
 };
 
 function replaceURLs(text) {
@@ -62,7 +62,7 @@ io.on('connection',  function (socket) {
     });
     socket.on("admin",  function(command) {
         try {
-            if (username === "dylanz") {
+            if (username === "kitcat") {
                 if (command == "getwaiting") {
                     socket.emit("adminwaiting", Object.keys(peopleWaiting));
                 }
@@ -87,7 +87,7 @@ io.on('connection',  function (socket) {
                 else if (command.startsWith("removepeople:")) {
                     var data = command.split(":")[1].split(";");
                     for (const i of data) {
-                        if (i != "dylanz") {
+                        if (i != "kitcat") {
                             delete users[i];
                             delete pfps[i];
                             io.emit("remove", i);
