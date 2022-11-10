@@ -14,6 +14,12 @@ var pfps = {
     "dylanz": "cat.png"
 };
 
+function replaceURLs(text) {
+    var urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, function(url) { return '<a target="_blank" href="' + url + '">' + url + '</a>'; } );
+  }
+  
+
 io.on('connection',  function (socket) {
     var loggedIn = false;
     var username = "";
@@ -99,7 +105,7 @@ io.on('connection',  function (socket) {
     socket.on("message",  function(text) {
         try {
             if (loggedIn && Date.now() > lastMessageTime + 1000) {
-                io.emit("message", [pfps[username], username, text.trim()]);
+                io.emit("message", [pfps[username], username, replaceURLs(text.trim())]);
                 lastMessageTime = Date.now();
             }
         }
