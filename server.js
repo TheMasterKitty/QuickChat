@@ -10,6 +10,8 @@ var peopleOnline = [];
 var users = {
     "kitcat": "themasterkitty"
 };
+var sockets = {};
+var DMable = [];
 var pfps = {
     "kitcat": "cat.png"
 };
@@ -31,6 +33,7 @@ io.on('connection',  function (socket) {
                 socket.emit("login", "valid-" + peopleOnline.join("<br>"));
                 io.emit("statusadd", username);
                 peopleOnline.push(username);
+                sockets[username] = socket;
             }
             else if (peopleOnline.includes(data.username))
                 socket.emit("login", "taken");
@@ -59,6 +62,23 @@ io.on('connection',  function (socket) {
             }
         }
         catch {}
+    });
+    socket.on("acceptdm", function(enable) {
+        try {
+            if (enable && !DMable.includes(username)) {
+                DMable.push(username);
+            }
+            else if (!enable && DMable.includes(username)) {
+                DMable.splice(DMable.indexOf(username), 1);
+            }
+        }
+        catch {}
+    });
+    socket.on("getdm", function(data) {
+        if (DMable.includes(username))
+            socket.emit("dms", DMable);
+        else
+            socket.emit("dms", ["You need to enable your DMs first."]);
     });
     socket.on("admin",  function(command) {
         try {
@@ -103,9 +123,17 @@ io.on('connection',  function (socket) {
     });
     socket.on("message",  function(text) {
         try {
-            if (loggedIn && Date.now() > lastMessageTime + 1000) {
-                io.emit("message", [pfps[username], username, replaceURLs(text.trim().replace(/<(?=.*? .*?\/ ?>|br|hr|input|!--|wbr)[a-z]+.*?>|<([a-z]+).*?<\/\1>/i, ""))]);
+            if (loggedIn && Date.now() > lastMessageTime + 1000 && text.replace(/<(?=.*? .*?\/ ?>|br|hr|input|!--|wbr)[a-z]+.*?>|<([a-z]+).*?<\/\1>/i, "") .trim() != "") {
+                io.emit("message", [pfps[username], username, replaceURLs(text.replace(/<(?=.*? .*?\/ ?>|br|hr|input|!--|wbr)[a-z]+.*?>|<([a-z]+).*?<\/\1>/i, "").trim())]);
                 lastMessageTime = Date.now();
+            }
+        }
+        catch {}
+    });
+    socket.on("dm",  function(data) {
+        try {
+            if (loggedIn && DMable.includes(data.user) && DMable.includes(username) && data.message.trim() != "") {
+                sockets[data.user].emit("dm", [pfps[username], username, replaceURLs(data.message.replace(/<(?=.*? .*?\/ ?>|br|hr|input|!--|wbr)[a-z]+.*?>|<([a-z]+).*?<\/\1>/i, "").trim())]);
             }
         }
         catch {}

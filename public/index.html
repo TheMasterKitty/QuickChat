@@ -9,10 +9,12 @@
         var socket = io();
         var lastmessagetime = 0;
         var unfocusedMsgs = 0;
-        document.onfocus = function() {
+        var lastDM = "";
+        var lastDMRecieved = "";
+        window.addEventListener("focus", function(event) { 
             document.title = "QuickChat";
             unfocusedMsgs = 0;
-        }
+        });
         socket.on("login",  function(data) {
             if (data.startsWith("valid-")) {
                 if (data.split("-")[1].length != 0)
@@ -38,7 +40,7 @@
             }
         })
         socket.on("adminwaiting",  function(data) {
-            alert("People Waiting: [" + data.join(", ") + "]");
+            alert("People Waiting: [" + data.join(";") + "]");
             if (confirm("Remove / Add any?")) {
                 var add = prompt("Which people should be signed up (Seperated by ;):");
                 var remove = confirm("Remove all?");
@@ -51,7 +53,7 @@
             }
         });
         socket.on("adminusers",  function(data) {
-            alert("User List: [" + data.join(", ") + "]");
+            alert("User List: [" + data.join(";") + "]");
             if (confirm("Remove any people?")) {
                 var remove = prompt("Which people should be removed (Seperated by ;):");
                 socket.emit("admin", "removepeople:" + remove);
@@ -83,7 +85,40 @@
                     document.title = "QuickChat - " + unfocusedMsgs;
                 }
             }
-        })
+        });
+
+        socket.on("dm", function(data) {
+            if (document.getElementById("login").style.display == "none") {
+                document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + "DM From " + data[1] + ": " + data[2] + "<br></h1>";
+                document.getElementById('messages').contentWindow.scrollTo(0, 2147483647);
+                lastDMRecieved = data[1];
+                if (!document.hasFocus()) {
+                    unfocusedMsgs++;
+                    document.title = "QuickChat - " + unfocusedMsgs;
+                }
+            }
+        });
+
+        socket.on("dms", function(data) {
+            var users =  data.splice(data.indexOf(document.getElementById("username").value)-1, 1);
+            if (users.join("; ").includes("You ")) {
+                alert(users.join("; "));
+            }
+            else if (document.getElementById("message").value.trim() != "") {
+                alert("Users (Copy One To DM): " + users.join("; "));
+                var dmUser = prompt("Who would you like to DM?");
+                lastDM = dmUser;
+                document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + "DM To " + dmUser + ": " + document.getElementById("message").value.trim() + "<br></h1>";
+                socket.emit("dm", {"user": dmUser, "message": document.getElementById("message").value.trim()});
+            }
+            else {
+                if (confirm("Write a message first, or click Cancel to set the next user to DM.")) {
+                    alert("Users (Copy One To DM): " + users.join("; "));
+                    var dmUser = prompt("Who would you like to DM?");
+                    lastDM = dmUser;
+                }
+            }
+        });
 
         function sendMessage() {
             if (Date.now() < lastmessagetime + 1000) {
@@ -95,6 +130,28 @@
                 socket.emit("message", document.getElementById("message").value.trim());
                 document.getElementById("message").value = "";
                 lastmessagetime = Date.now();
+            }
+        }
+
+        function sendMessageNewDM() {
+            socket.emit("getdm", "");
+        }
+
+        function sendMessageDM() {
+            if (lastDM == "")
+                sendMessageNewDM();
+            else if (document.getElementById("message").value.trim() != "") {
+                document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + "DM To " + lastDM + ": " + document.getElementById("message").value.trim() + "<br></h1>";
+                socket.emit("dm", {"user": lastDM, "message": document.getElementById("message").value.trim()});
+            }
+        }
+
+        function sendMessageReplyDM() {
+            if (lastDMRecieved == "")
+                alert("No DMs Recieved Yet.");
+            else if (document.getElementById("message").value.trim() != "") {
+                document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + "DM To " + lastDMRecieved + ": " + document.getElementById("message").value.trim() + "<br></h1>";
+                socket.emit("dm", {"user": lastDMRecieved, "message": document.getElementById("message").value.trim()});
             }
         }
     </script>
@@ -190,8 +247,12 @@
     <div style="display: none;" id="main">
         <iframe id="messages" srcdoc="<style>* { color: white; font-size: 24px; } img {height: 30px; }</style><h1></h1>" style="left: 10%; top: 2.5%; width:65%; height: 85%; position: absolute; color:white; border-color: wheat; border-style: double; border-width: 2px;"></iframe>
         <iframe id="statuses" srcdoc="<style>* { color: white; font-size: 32px; }</style><h1>Online:<br></h1>" style="left: 80%; top: 2.5%; width:15%; height: 85%; position: absolute; color:white; border-color: wheat; border-style: double; border-width: 2px;"></iframe>
-        <input style="left:19%; top:90%;" onkeydown="if (event.key == `Enter`) sendMessage();" type="text" id="message" />
-        <button onclick="sendMessage();" style="top:90%; left: 61%">SEND</button>
+        <input style="left:9%; top:90%;" onkeydown="if (event.key == `Enter`) sendMessage();" type="text" id="message" />
+        <button onclick="sendMessage();" style="top:90%; left: 51%; width:6%;">SEND</button>
+        <button onclick="sendMessageDM();" style="top:90%; left: 57.5%; width:11%;">DM LAST</button>
+        <button onclick="sendMessageNewDM();" style="top:90%; left: 69%; width:7%;">NEWDM</button>
+        <button onclick="sendMessageReplyDM();" style="top:90%; left: 76.5%; width:7%;">REPLY</button>
+        <input id="acceptDMs" onchange="socket.emit('acceptdm', this.checked)" type="checkbox" style="top:90%; left: 84%; position: absolute; width:auto; height:4%;" /><label for="acceptDMs" style="top:90%; height:5%; left: 85%; width:auto; position:absolute;">Accept DMs</label>
         <button id="loginReqs" onclick="socket.emit('admin', 'getwaiting');" style="top:1%; width:11.5%; left: 1%; display:none;">
             REQUESTS
         </button>
