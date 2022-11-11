@@ -1,20 +1,24 @@
 const http = require('http');
 var { Server } = require("socket.io");
-
 var app = require("express")();
 const server = http.createServer(app);
 var io = new Server(server);
 var port = process.env.PORT || 8080;
+
 var peopleWaiting = {};
-var peopleOnline = [];
 var users = {
     "kitcat": "themasterkitty"
 };
-var sockets = {};
-var DMable = [];
 var pfps = {
     "kitcat": "cat.png"
 };
+
+console.log("Users: " + JSON.stringify(users));
+console.log("PFPs: " + JSON.stringify(pfps));
+
+var sockets = {};
+var peopleOnline = [];
+var DMable = [];
 
 function replaceURLs(text) {
     var urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -98,6 +102,8 @@ io.on('connection',  function (socket) {
                         users[i] = peopleWaiting[i]["pass"];
                         pfps[i] = peopleWaiting[i]["pfp"];
                         io.emit("message", [pfps[i], "BROADCAST", i + " has been signed up! Say hi when they join."]);
+                        console.log("Users: " + JSON.stringify(users));
+                        console.log("PFPs: " + JSON.stringify(pfps));
                         delete peopleWaiting[i];
                     }
                 }
@@ -177,3 +183,18 @@ app.get("/goat.png", function(req, res) {
 server.listen(port);
 
 console.log(`Running on port ${port}`);
+
+const readline = require("readline");
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+rl.question("User List (JSON):  ", function (answer) {
+    users = JSON.parse(answer);
+});
+
+rl.question("PPF List (JSON):  ", function (answer) {
+    pfps = JSON.parse(answer);
+});
