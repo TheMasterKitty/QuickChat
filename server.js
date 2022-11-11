@@ -1,5 +1,6 @@
-const http = require('http');
+var http = require('http');
 var { Server } = require("socket.io");
+var fs = require("fs");
 var app = require("express")();
 const server = http.createServer(app);
 var io = new Server(server);
@@ -12,6 +13,20 @@ var users = {
 var pfps = {
     "kitcat": "cat.png"
 };
+
+try {
+    const data = fs.readFileSync(__dirname + '\\users.txt', 'utf8');
+    users = JSON.parse(data);
+} catch (err) {
+    console.error(err);
+}
+
+try {
+    const data = fs.readFileSync(__dirname + '\\pfps.txt', 'utf8');
+    pfps = JSON.parse(data);
+} catch (err) {
+    console.error(err);
+}
 
 console.log("Users: " + JSON.stringify(users));
 console.log("PFPs: " + JSON.stringify(pfps));
@@ -183,18 +198,3 @@ app.get("/goat.png", function(req, res) {
 server.listen(port);
 
 console.log(`Running on port ${port}`);
-
-const readline = require("readline");
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-rl.question("User List (JSON):  ", function (answer) {
-    users = JSON.parse(answer);
-});
-
-rl.question("PPF List (JSON):  ", function (answer) {
-    pfps = JSON.parse(answer);
-});
