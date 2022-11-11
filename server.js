@@ -15,14 +15,14 @@ var pfps = {
 };
 
 try {
-    const data = fs.readFileSync(__dirname + '\\users.txt', 'utf8');
+    const data = fs.readFileSync(__dirname + '/users.txt', 'utf8');
     users = JSON.parse(data);
 } catch (err) {
     console.error(err);
 }
 
 try {
-    const data = fs.readFileSync(__dirname + '\\pfps.txt', 'utf8');
+    const data = fs.readFileSync(__dirname + '/pfps.txt', 'utf8');
     pfps = JSON.parse(data);
 } catch (err) {
     console.error(err);
