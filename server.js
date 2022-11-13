@@ -97,7 +97,7 @@ io.on('connection',  function (socket) {
         if (DMable.includes(username))
             socket.emit("dms", DMable);
         else
-            socket.emit("dms", ["You need to enable your DMs first."]);
+            socket.emit("dms", ["err dms"]);
     });
     socket.on("admin",  function(command) {
         try {
@@ -155,13 +155,16 @@ io.on('connection',  function (socket) {
         try {
             if (loggedIn && DMable.includes(data.user) && DMable.includes(username) && data.message.trim() != "") {
                 sockets[data.user].emit("dm", [pfps[username], username, replaceURLs(data.message.replace(/<(?=.*? .*?\/ ?>|br|hr|input|!--|wbr)[a-z]+.*?>|<([a-z]+).*?<\/\1>/i, "").trim())]);
+                socket.emit("dmsend", [pfps[username], data.user, replaceURLs(data.message.replace(/<(?=.*? .*?\/ ?>|br|hr|input|!--|wbr)[a-z]+.*?>|<([a-z]+).*?<\/\1>/i, "").trim())]);
             }
         }
         catch {}
     });
     socket.on("disconnect",  function() {
         if (loggedIn) {
-            peopleOnline.splice(peopleOnline.indexOf(username), 1)
+            peopleOnline.splice(peopleOnline.indexOf(username), 1);
+            if (DMable.includes(username))
+                DMable.splice(DMable.indexOf(username), 1);
             io.emit("statusremove", username);
         }
     })
