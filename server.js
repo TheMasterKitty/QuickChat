@@ -84,12 +84,10 @@ io.on('connection',  function (socket) {
     });
     socket.on("acceptdm", function(enable) {
         try {
-            if (enable && !DMable.includes(username)) {
+            if (enable == "true" && !DMable.includes(username))
                 DMable.push(username);
-            }
-            else if (!enable && DMable.includes(username)) {
+            else if (enable == "false" && DMable.includes(username))
                 DMable.splice(DMable.indexOf(username), 1);
-            }
         }
         catch {}
     });

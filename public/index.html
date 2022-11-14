@@ -263,7 +263,7 @@
         <button onclick="sendMessageDM();" style="top:90%; left: 57.5%; width:11%;">LAST DM</button>
         <button onclick="sendMessageNewDM();" style="top:90%; left: 69%; width:7%;">NEWDM</button>
         <button onclick="sendMessageReplyDM();" style="top:90%; left: 76.5%; width:7%;">REPLY</button>
-        <input id="acceptDMs" onchange="socket.emit('acceptdm', this.checked)" type="checkbox" style="top:90%; left: 84%; position: absolute; width:auto; height:4%;" /><label for="acceptDMs" style="top:90%; height:5%; left: 85%; width:auto; position:absolute;">Accept DMs</label>
+        <input id="acceptDMs" onchange="socket.emit('acceptdm', document.getElementById('acceptDMs').checked.toString());" type="checkbox" style="top:90%; left: 84%; position: absolute; width:auto; height:4%;" /><label for="acceptDMs" style="top:90%; height:5%; left: 85.5%; width:auto; position:absolute;">Accept DMs</label>
         <button id="loginReqs" onclick="socket.emit('admin', 'getwaiting');" style="top:1%; width:11.5%; left: 1%; display:none;">
             REQUESTS
         </button>

@@ -1,1 +1,1 @@
-{"kitcat":"cat.png"}
+{"kitcat":"cat.png","GermanPerson":"https://quick-chat-app.onrender.com/goat.png"}
