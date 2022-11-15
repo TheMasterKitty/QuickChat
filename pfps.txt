@@ -1,1 +1,1 @@
-{"kitcat":"cat.png","GermanPerson":"https://quick-chat-app.onrender.com/goat.png"}
+{"kitcat":"cat.png","GermanPerson":"https://quick-chat-app.onrender.com/goat.png","jamesthegoat":"https://quick-chat-app.onrender.com/goat.png","heidihacks":"https://quick-chat-app.onrender.com/fox.png"}
