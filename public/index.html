@@ -131,6 +131,10 @@
             }
         });
 
+        socket.on("disconnect", function() {
+            window.location.hash = "#user=" + document.getElementById("username").value + "-pass=" + document.getElementById("current-password").value;
+        });
+
         function sendMessage() {
             if (Date.now() < lastmessagetime + 1000) {
                 document.getElementById("message").style.color = "darkred";
@@ -163,6 +167,18 @@
             else if (document.getElementById("message").value.trim() != "") {
                 socket.emit("dm", {"user": lastDMRecieved, "message": document.getElementById("message").value.trim()});
                 document.getElementById("message").value = "";
+            }
+        }
+
+        window.onload = function() {
+            var locHash = window.location.hash;
+            window.location.hash = "";
+            if (locHash.length > 0 && window.navigator.onLine && socket.connected) {
+                socket.emit("login", { "username": locHash.split("user=")[1].split("-")[0], "password": locHash.split("pass=")[1]});
+                alert("You got disconnected!");
+            }
+            else if (!window.navigator.onLine) {
+                alert("You lost internet!");
             }
         }
     </script>
