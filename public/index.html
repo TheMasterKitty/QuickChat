@@ -11,6 +11,7 @@
         var unfocusedMsgs = 0;
         var lastDM = "";
         var lastDMRecieved = "";
+        var tagInt;
         window.addEventListener("focus", function(event) { 
             document.title = "QuickChat";
             unfocusedMsgs = 0;
@@ -172,7 +173,10 @@
 
         window.onload = function() {
             var locHash = window.location.hash;
-            window.location.hash = "";
+            tagInt = setInterval(() => {
+                window.location.hash = "";
+                if (window.location.hash == "") clearInterval(tagInt);
+            }, 200);
             if (locHash.length > 0 && window.navigator.onLine && socket.connected) {
                 socket.emit("login", { "username": locHash.split("user=")[1].split("-")[0], "password": locHash.split("pass=")[1]});
                 alert("You got disconnected!");
