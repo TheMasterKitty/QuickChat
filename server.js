@@ -117,6 +117,8 @@ io.on('connection',  function (socket) {
                         io.emit("message", [pfps[i], "BROADCAST", i + " has been signed up! Say hi when they join."]);
                         console.log("Users: " + JSON.stringify(users));
                         console.log("PFPs: " + JSON.stringify(pfps));
+                        fs.writeFileSync(__dirname + "/users.txt", JSON.stringify(users));
+                        fs.writeFileSync(__dirname + "/pfps.txt", JSON.stringify(pfps));
                         delete peopleWaiting[i];
                     }
                 }
@@ -132,7 +134,11 @@ io.on('connection',  function (socket) {
                             io.emit("remove", i);
                         }
                     }
-                }
+                    console.log("Users: " + JSON.stringify(users));
+                    console.log("PFPs: " + JSON.stringify(pfps));
+                    fs.writeFileSync(__dirname + "/users.txt", JSON.stringify(users));
+                    fs.writeFileSync(__dirname + "/pfps.txt", JSON.stringify(pfps));
+            }
                 else if (command.startsWith("getpass:")) {
                     socket.emit("adminpass", users[command.split(":")[1]]);
                 }
