@@ -18,8 +18,7 @@
         });
         socket.on("login",  function(data) {
             if (data.startsWith("valid-")) {
-                if (data.split("-")[1].length != 0)
-                    document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split("</h1>")[0] + data.split("-")[1] + "<br></h1>";
+                document.getElementById("statuses").srcdoc += "<h1>Online<br>" + data.substring(6).split("-")[0] + "</h1>";
                 document.getElementById("login").style.display = "none";
                 document.getElementById("main").style.display = "block";
                 if (document.getElementById("username").value === "kitcat") {
@@ -67,20 +66,22 @@
 
         socket.on("statusadd", function(data) {
             if (document.getElementById("login").style.display == "none") {
-                document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split("</h1>")[0] + data + "<br></h1>";
+                document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split("</h1>")[0] + data + "</h1>";
             }
         });
 
         socket.on("statusremove", function(data) {
             if (document.getElementById("login").style.display == "none") {
-                document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split(data)[0] + document.getElementById("statuses").srcdoc.split(data + "<br>")[1];
+                document.getElementById("statuses").srcdoc = document.getElementById("statuses").srcdoc.split(data)[0] + document.getElementById("statuses").srcdoc.split(data)[1];
             }
         });
 
         socket.on("message", function(data) {
             if (document.getElementById("login").style.display == "none") {
                 document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + data[1] + ": " + data[2] + "<br></h1>";
-                document.getElementById('messages').contentWindow.scrollTo(0, 2147483647);
+                setTimeout(() => {
+                    document.getElementById('messages').contentWindow.scrollBy(0, 250);
+                }, 10);
                 if (!document.hasFocus()) {
                     unfocusedMsgs++;
                     document.title = "QuickChat - " + unfocusedMsgs;
@@ -91,7 +92,9 @@
         socket.on("dm", function(data) {
             if (document.getElementById("login").style.display == "none") {
                 document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + "DM From " + data[1] + ": " + data[2] + "<br></h1>";
-                document.getElementById('messages').contentWindow.scrollTo(0, 2147483647);
+                setTimeout(() => {
+                    document.getElementById('messages').contentWindow.scrollBy(0, 250);
+                }, 10);
                 lastDMRecieved = data[1];
                 if (!document.hasFocus()) {
                     unfocusedMsgs++;
@@ -103,7 +106,9 @@
         socket.on("dmsend", function(data) {
             if (document.getElementById("login").style.display == "none") {
                 document.getElementById("messages").srcdoc = document.getElementById("messages").srcdoc.split("</h1>")[0] + "<img src=\"" + data[0] + "\">" + "DM To " + data[1] + ": " + data[2] + "<br></h1>";
-                document.getElementById('messages').contentWindow.scrollTo(0, 2147483647);
+                setTimeout(() => {
+                    document.getElementById('messages').contentWindow.scrollBy(0, 250);
+                }, 10);
                 if (!document.hasFocus()) {
                     unfocusedMsgs++;
                     document.title = "QuickChat - " + unfocusedMsgs;
@@ -133,7 +138,8 @@
         });
 
         socket.on("disconnect", function() {
-            window.location.hash = "#user=" + document.getElementById("username").value + "-pass=" + document.getElementById("current-password").value;
+            socket = socket.connect();
+            socket.emit("login", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value });
         });
 
         function sendMessage() {
@@ -168,21 +174,6 @@
             else if (document.getElementById("message").value.trim() != "") {
                 socket.emit("dm", {"user": lastDMRecieved, "message": document.getElementById("message").value.trim()});
                 document.getElementById("message").value = "";
-            }
-        }
-
-        window.onload = function() {
-            var locHash = window.location.hash;
-            tagInt = setInterval(() => {
-                window.location.hash = "";
-                if (window.location.hash == "") clearInterval(tagInt);
-            }, 200);
-            if (locHash.length > 0 && window.navigator.onLine && socket.connected) {
-                socket.emit("login", { "username": locHash.split("user=")[1].split("-")[0], "password": locHash.split("pass=")[1]});
-                alert("You got disconnected!");
-            }
-            else if (!window.navigator.onLine) {
-                alert("You lost internet!");
             }
         }
     </script>
@@ -268,16 +259,16 @@
             <input id="username" type="text" />
             <label style="top:40%;">PASSWORD:</label>
             <input id="current-password" type="password" />
-            <button onclick='socket.emit("login", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value,});' style="left: 30%;">LOGIN</button>
+            <button onclick='socket.emit("login", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value });' style="left: 30%;">LOGIN</button>
             <button onclick='document.getElementById("pfps").style.display = "block";' style="left: 45%;">SIGNUP</button>
             <button onclick='alert("Press cancel twice if your username and password are not in the text boxes."); if (confirm("Reset Password?")) socket.emit("reset", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "newpass": prompt("What is the new password?")}); if (confirm("Change Icon?")) document.getElementById("pfps2").style.display = "block";' style="left: 60%;">EDIT</button>
-            <div id="pfps" style="display:none;"><img src="cat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="fox.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="parrot.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="horse.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="goat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'></div>
-            <div id="pfps2" style="display:none;"><img src="cat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="fox.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="parrot.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="horse.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="goat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'></div>
+            <div id="pfps" style="display:none;"><img src="cat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="fox.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="penguin.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="horse.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'><img src="goat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps").style.display = "none";alert("Your request has been sent. Check back later and press login to see if you were accepted.");'></div>
+            <div id="pfps2" style="display:none;"><img src="cat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="fox.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="penguin.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="horse.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'><img src="goat.png" onclick='socket.emit("signup", { "username": document.getElementById("username").value, "password": document.getElementById("current-password").value, "pfp": this.src.split(`/`)[this.src.split(`/`).length-1]}); document.getElementById("pfps2").style.display = "none";alert("Profile icon changed.");'></div>
         </form>
     </div>
     <div style="display: none;" id="main">
-        <iframe id="messages" srcdoc="<style>* { color: white; font-size: 24px; } img {height: 30px; }</style><h1></h1>" style="left: 10%; top: 2.5%; width:65%; height: 85%; position: absolute; color:white; border-color: wheat; border-style: double; border-width: 2px;"></iframe>
-        <iframe id="statuses" srcdoc="<style>* { color: white; font-size: 32px; }</style><h1>Online:<br></h1>" style="left: 80%; top: 2.5%; width:15%; height: 85%; position: absolute; color:white; border-color: wheat; border-style: double; border-width: 2px;"></iframe>
+        <iframe id="messages" srcdoc="<style>h1 { color: white; font-size: 32px; } img {height: 30px; }</style><h1></h1>" style="left: 10%; top: 2.5%; width:65%; height: 85%; position: absolute; color:white; border-color: wheat; border-style: double; border-width: 2px;"></iframe>
+        <iframe id="statuses" srcdoc="<style>h1 { color: white; font-size: 35px; } img {height: 32px; }</style>" style="left: 80%; top: 2.5%; width:15%; height: 85%; position: absolute; color:white; border-color: wheat; border-style: double; border-width: 2px;"></iframe>
         <input style="left:9%; top:90%;" onkeydown="if (event.key == `Enter`) sendMessage();" type="text" id="message" />
         <button onclick="sendMessage();" style="top:90%; left: 51%; width:6%;">SEND</button>
         <button onclick="sendMessageDM();" style="top:90%; left: 57.5%; width:11%;">LAST DM</button>

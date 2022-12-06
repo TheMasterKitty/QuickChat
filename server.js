@@ -1,7 +1,8 @@
 var http = require('http');
 var { Server } = require("socket.io");
 var fs = require("fs");
-var app = require("express")();
+var express = require("express");
+var app = express();
 const server = http.createServer(app);
 var io = new Server(server);
 var port = process.env.PORT || 8080;
@@ -28,8 +29,8 @@ try {
     console.error(err);
 }
 
-console.log("Users: " + JSON.stringify(users));
-console.log("PFPs: " + JSON.stringify(pfps));
+fs.writeFileSync("users.txt", JSON.stringify(users));
+pfps.writeFileSync("users.txt", JSON.stringify(pfps));
 
 var sockets = {};
 var peopleOnline = [];
@@ -49,8 +50,11 @@ io.on('connection',  function (socket) {
             if (Object.keys(users).includes(data.username) && users[data.username] === data.password && !peopleOnline.includes(data.username)) {
                 loggedIn = true;
                 username = data.username;
-                socket.emit("login", "valid-" + peopleOnline.join("<br>"));
-                io.emit("statusadd", username);
+                var toSend = "";
+                peopleOnline.forEach(el => toSend += "<img src='" + pfps[el] + "'>" + el + "<br>");
+                socket.emit("login", "valid-" + toSend);
+                io.emit("statusadd", "<img src='" + pfps[username] + "'>" + username + "<br>");
+                io.emit("message", [pfps[username], "[BC]", username + " is now online."]);
                 peopleOnline.push(username);
                 sockets[username] = socket;
             }
@@ -114,11 +118,9 @@ io.on('connection',  function (socket) {
                     for (const i of data) {
                         users[i] = peopleWaiting[i]["pass"];
                         pfps[i] = peopleWaiting[i]["pfp"];
-                        io.emit("message", [pfps[i], "BROADCAST", i + " has been signed up! Say hi when they join."]);
-                        console.log("Users: " + JSON.stringify(users));
-                        console.log("PFPs: " + JSON.stringify(pfps));
-                        fs.writeFileSync(__dirname + "/users.txt", JSON.stringify(users));
-                        fs.writeFileSync(__dirname + "/pfps.txt", JSON.stringify(pfps));
+                        io.emit("message", [pfps[i], "[BC]", i + " has been signed up! Say hi when they join."]);
+                        fs.writeFileSync("users.txt", JSON.stringify(users));
+                        pfps.writeFileSync("users.txt", JSON.stringify(pfps));
                         delete peopleWaiting[i];
                     }
                 }
@@ -134,11 +136,7 @@ io.on('connection',  function (socket) {
                             io.emit("remove", i);
                         }
                     }
-                    console.log("Users: " + JSON.stringify(users));
-                    console.log("PFPs: " + JSON.stringify(pfps));
-                    fs.writeFileSync(__dirname + "/users.txt", JSON.stringify(users));
-                    fs.writeFileSync(__dirname + "/pfps.txt", JSON.stringify(pfps));
-            }
+                }
                 else if (command.startsWith("getpass:")) {
                     socket.emit("adminpass", users[command.split(":")[1]]);
                 }
@@ -169,38 +167,12 @@ io.on('connection',  function (socket) {
             peopleOnline.splice(peopleOnline.indexOf(username), 1);
             if (DMable.includes(username))
                 DMable.splice(DMable.indexOf(username), 1);
-            io.emit("statusremove", username);
+            io.emit("statusremove", "<img src='" + pfps[username] + "'>" + username + "<br>");
         }
     })
 });
 
-app.get("/",  function(req, res) {
-    res.sendFile(__dirname + "/public/index.html");
-});
-
-app.get("/icon.png", function(req, res) {
-    res.sendFile(__dirname + "/public/icon.png");
-});
-
-app.get("/cat.png", function(req, res) {
-    res.sendFile(__dirname + "/public/cat.png");
-});
-
-app.get("/horse.png", function(req, res) {
-    res.sendFile(__dirname + "/public/horse.png");
-});
-
-app.get("/fox.png", function(req, res) {
-    res.sendFile(__dirname + "/public/fox.png");
-});
-
-app.get("/parrot.png", function(req, res) {
-    res.sendFile(__dirname + "/public/parrot.png");
-});
-
-app.get("/goat.png", function(req, res) {
-    res.sendFile(__dirname + "/public/goat.png");
-});
+app.use(express.static("./public"))
 
 server.listen(port);
 
